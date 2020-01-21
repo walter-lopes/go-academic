@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	. "./pricing"
 	"github.com/gorilla/mux"
@@ -15,8 +16,7 @@ var repository = Repository{}
 func findOne(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	var multi cache.Multiplicator
-	var total = 0
+	var multi Multiplicator
 
 	city := vars["city"]
 	distance, _ := strconv.ParseFloat(vars["distance"], 64)
@@ -29,22 +29,23 @@ func findOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	multi, found := cache.GetCache(city)
+	multi, found := GetCache(city)
 
 	if !found {
-		newMulti := new(cache.Multiplicator)
+		newMulti := new(Multiplicator)
 		newMulti.Multiplicator = 1.0
-		newMulti.ExpirationTime = time.Add(5 * time.Minute)
-		cache.SetCache(city, newMulti)
+		newMulti.ExpirationTime = time.Now().Add(5 * time.Minute)
+		SetCache(city, newMulti)
 
 		total := pricing.Calc(distance, minutes, 1.0)
+		json.NewEncoder(w).Encode(total)
 	} else {
 		multi.Multiplicator += 0.1
 		total := pricing.Calc(distance, minutes, multi.Multiplicator)
-		cache.SetCache(city, multi)
+		SetCache(city, multi)
+		json.NewEncoder(w).Encode(total)
 	}
 
-	json.NewEncoder(w).Encode(total)
 }
 
 func handleRequests() {
@@ -64,11 +65,6 @@ func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
-}
-
-type FakeCache struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
 }
 
 func init() {
