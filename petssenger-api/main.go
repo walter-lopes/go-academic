@@ -15,6 +15,9 @@ var repository = Repository{}
 func findOne(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
+	var multi cache.Multiplicator
+	var total = 0
+
 	city := vars["city"]
 	distance, _ := strconv.ParseFloat(vars["distance"], 64)
 	minutes, _ := strconv.ParseFloat(vars["minutes"], 64)
@@ -26,7 +29,21 @@ func findOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	total := pricing.Calc(distance, minutes)
+	multi, found := cache.GetCache(city)
+
+	if !found {
+		newMulti := new(cache.Multiplicator)
+		newMulti.Multiplicator = 1.0
+		newMulti.ExpirationTime = time.Add(5 * time.Minute)
+		cache.SetCache(city, newMulti)
+
+		total := pricing.Calc(distance, minutes, 1.0)
+	} else {
+		multi.Multiplicator += 0.1
+		total := pricing.Calc(distance, minutes, multi.Multiplicator)
+		cache.SetCache(city, multi)
+	}
+
 	json.NewEncoder(w).Encode(total)
 }
 
@@ -47,6 +64,11 @@ func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
+}
+
+type FakeCache struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 func init() {
