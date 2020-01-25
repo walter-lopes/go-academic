@@ -34,13 +34,14 @@ func findOne(w http.ResponseWriter, r *http.Request) {
 	if !found {
 		newMulti := new(Multiplicator)
 		newMulti.Multiplicator = 1.0
-		newMulti.ExpirationTime = time.Now().Add(5 * time.Minute)
-		SetCache(city, newMulti)
+		newMulti.ExpirationTime = time.Now().Add(10 * time.Second)
+
+		SetCache(city, *newMulti)
 
 		total := pricing.Calc(distance, minutes, 1.0)
 		json.NewEncoder(w).Encode(total)
 	} else {
-		multi.Multiplicator += 0.1
+		multi.Multiplicator = pricing.GetMultiplicator(multi.Multiplicator, multi.ExpirationTime)
 		total := pricing.Calc(distance, minutes, multi.Multiplicator)
 		SetCache(city, multi)
 		json.NewEncoder(w).Encode(total)

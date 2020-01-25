@@ -22,6 +22,7 @@ func GetCache(key string) (Multiplicator, bool) {
 	var multi Multiplicator
 	var found bool
 	data, found := Cache.Get(key)
+
 	if found {
 		multi = data.(Multiplicator)
 	}

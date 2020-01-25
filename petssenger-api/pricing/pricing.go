@@ -1,6 +1,8 @@
 package pricing
 
 import (
+	"fmt"
+	"math"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -16,14 +18,15 @@ type Pricing struct {
 }
 
 func (pricing *Pricing) Calc(distance float64, minutes float64, multiplicator float64) float64 {
+	fmt.Println(multiplicator)
 	total := pricing.BaseFee + ((pricing.PricePerMinute * minutes) + (pricing.PricePerKm*distance)*multiplicator) + pricing.ServiceFee
-	return total
+	return math.Floor(total*100) / 100
 }
 
 func (pricing *Pricing) GetMultiplicator(multiplicator float64, expiredTime time.Time) float64 {
 	now := time.Now()
 
-	if expiredTime.Before(now) {
+	if expiredTime.After(now) {
 		return multiplicator + 0.1
 	}
 
