@@ -1,9 +1,10 @@
-package pricing
+package repository
 
 import (
 	"fmt"
 	"log"
 
+	. "../models"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

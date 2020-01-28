@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	. "./pricing"
+	. "./repository"
 	"github.com/gorilla/mux"
 )
 
@@ -21,6 +21,7 @@ func findOne(w http.ResponseWriter, r *http.Request) {
 	city := vars["city"]
 	distance, _ := strconv.ParseFloat(vars["distance"], 64)
 	minutes, _ := strconv.ParseFloat(vars["minutes"], 64)
+	userId, _ := vars["userId"]
 
 	pricing, err := repository.Find(city)
 
@@ -29,21 +30,20 @@ func findOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	multi, found := GetCache(city)
+	multi, found := GetCache(city + userId)
 
 	if !found {
-		newMulti := new(Multiplicator)
-		newMulti.Multiplicator = 1.0
-		newMulti.ExpirationTime = time.Now().Add(10 * time.Second)
+		newMulti := &Multiplicator{Multiplicator: 1.0, ExpirationTime: time.Now().Add(5 * time.Minute)}
 
-		SetCache(city, *newMulti)
+		SetCache(city+userId, *newMulti)
 
 		total := pricing.Calc(distance, minutes, 1.0)
+
 		json.NewEncoder(w).Encode(total)
 	} else {
 		multi.Multiplicator = pricing.GetMultiplicator(multi.Multiplicator, multi.ExpirationTime)
 		total := pricing.Calc(distance, minutes, multi.Multiplicator)
-		SetCache(city, multi)
+		SetCache(city+userId, multi)
 		json.NewEncoder(w).Encode(total)
 	}
 
@@ -52,7 +52,7 @@ func findOne(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 
-	myRouter.HandleFunc("/pricing/city/{city}/distance/{distance}/minutes/{minutes}", findOne)
+	myRouter.HandleFunc("/pricing/city/{city}/distance/{distance}/minutes/{minutes}/userId/{userId}", findOne)
 
 	log.Fatal(http.ListenAndServe(":10000", myRouter))
 }

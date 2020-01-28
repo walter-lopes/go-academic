@@ -1,4 +1,4 @@
-package pricing
+package models
 
 import (
 	"fmt"
@@ -32,5 +32,3 @@ func (pricing *Pricing) GetMultiplicator(multiplicator float64, expiredTime time
 
 	return multiplicator - 0.1
 }
-
-var Pricings []Pricing
