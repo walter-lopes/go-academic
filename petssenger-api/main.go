@@ -5,47 +5,34 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
+	. "./config"
 	. "./repository"
+	. "./services"
 	"github.com/gorilla/mux"
 )
+
+var service = Service{}
+
+var config = Config{}
 
 var repository = Repository{}
 
 func findOne(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	var multi Multiplicator
-
 	city := vars["city"]
 	distance, _ := strconv.ParseFloat(vars["distance"], 64)
 	minutes, _ := strconv.ParseFloat(vars["minutes"], 64)
 	userId, _ := vars["userId"]
 
-	pricing, err := repository.Find(city)
+	total, err := service.FindPricingCalculated(city, distance, minutes, userId)
 
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid city")
-		return
+		respondWithError(w, http.StatusBadRequest, "Error")
 	}
 
-	multi, found := GetCache(city + userId)
-
-	if !found {
-		newMulti := &Multiplicator{Multiplicator: 1.0, ExpirationTime: time.Now().Add(5 * time.Minute)}
-
-		SetCache(city+userId, *newMulti)
-
-		total := pricing.Calc(distance, minutes, 1.0)
-
-		json.NewEncoder(w).Encode(total)
-	} else {
-		multi.Multiplicator = pricing.GetMultiplicator(multi.Multiplicator, multi.ExpirationTime)
-		total := pricing.Calc(distance, minutes, multi.Multiplicator)
-		SetCache(city+userId, multi)
-		json.NewEncoder(w).Encode(total)
-	}
+	json.NewEncoder(w).Encode(total)
 
 }
 
@@ -69,7 +56,12 @@ func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
 }
 
 func init() {
-	repository.Connect()
+	config.Read()
+
+	server := config.Server
+	database := config.Database
+
+	repository.Connect(server, database)
 }
 
 func main() {

@@ -3,15 +3,11 @@ package repository
 import (
 	"time"
 
+	. "../models"
 	"github.com/patrickmn/go-cache"
 )
 
 var Cache = cache.New(5*time.Minute, 5*time.Minute)
-
-type Multiplicator struct {
-	Multiplicator  float64   `json:"multiplicator"`
-	ExpirationTime time.Time `json:"expirationTime"`
-}
 
 func SetCache(key string, multi interface{}) bool {
 	Cache.Set(key, multi, cache.NoExpiration)

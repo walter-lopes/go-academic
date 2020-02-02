@@ -11,21 +11,17 @@ import (
 
 type Repository struct{}
 
-const SERVER = "mongodb://admin:admin123@ds253368.mlab.com:53368/live-dotnet"
-
-const DBNAME = "live-dotnet"
-
 const DOCNAME = "Pricing"
 
 var db *mgo.Database
 
-func (r *Repository) Connect() {
-	session, err := mgo.Dial(SERVER)
+func (r *Repository) Connect(server string, database string) {
+	session, err := mgo.Dial(server)
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
 	}
-	db = session.DB(DBNAME)
+	db = session.DB(database)
 }
 
 func (r Repository) Find(city string) (Pricing, error) {

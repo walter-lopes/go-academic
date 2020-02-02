@@ -1,0 +1,3 @@
+
+server = "mongodb://admin:admin123@ds253368.mlab.com:53368/live-dotnet"
+database = "live-dotnet"
