@@ -41,7 +41,7 @@ func handleRequests() {
 
 	myRouter.HandleFunc("/pricing/city/{city}/distance/{distance}/minutes/{minutes}/userId/{userId}", findOne)
 
-	log.Fatal(http.ListenAndServe(":10000", myRouter))
+	log.Fatal(http.ListenAndServe(":9090", myRouter))
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
