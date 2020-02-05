@@ -23,9 +23,9 @@ func (s Service) FindPricingCalculated(city string, distance float64, minutes fl
 	multi, found := GetCache(city + userId)
 
 	if !found {
-		newMulti := &Multiplicator{Multiplicator: 1.0, ExpirationTime: time.Now().Add(5 * time.Minute)}
+		newMulti := Multiplicator{Multiplicator: 1.0, ExpirationTime: time.Now().Add(5 * time.Minute)}
 
-		SetCache(city+userId, *newMulti)
+		SetCache(city+userId, newMulti)
 
 		total := pricing.Calc(distance, minutes, 1.0)
 
