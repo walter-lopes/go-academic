@@ -20,12 +20,12 @@ func (s Service) FindPricingCalculated(city string, distance float64, minutes fl
 		return 0.0, err
 	}
 
-	multi, found := GetCache(city + userId)
+	multi, found := GetRedisCache(city + userId)
 
 	if !found {
 		newMulti := Multiplicator{Multiplicator: 1.0, ExpirationTime: time.Now().Add(5 * time.Minute)}
 
-		SetCache(city+userId, newMulti)
+		SetRedisCache(city+userId, newMulti)
 
 		total := pricing.Calc(distance, minutes, 1.0)
 
@@ -33,7 +33,7 @@ func (s Service) FindPricingCalculated(city string, distance float64, minutes fl
 	} else {
 		multi.Multiplicator = pricing.GetMultiplicator(multi.Multiplicator, multi.ExpirationTime)
 
-		SetCache(city+userId, multi)
+		SetRedisCache(city+userId, multi)
 
 		total := pricing.Calc(distance, minutes, multi.Multiplicator)
 
